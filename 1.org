@@ -1,0 +1,529 @@
+
+Тема: Работа с абстрактными классами, интерфейсами, строками.
+Использование коллекций при решении практических задач.
+
+Цель работы: получение практических навыков при создании абстрактных классов
+и интерфейсов, при работе с коллекциями.
+
+Выполнение работы:
+
+Задание 1. Изучить теоретический материал про абстрактные классы
+и интерфейсы в Java.
+
+Задание 2. Выполнить примеры, разобранные на лекции при изучении абстрактных классов и интерфейсов в C#.
+
+а) Классы Cat и HomeCat.
+
+#+CAPTION: Cat
+#+begin_src java
+package org.example;
+
+public abstract class Cat {
+    private int age;
+
+    public Cat(int a) {
+        setAge(a);
+    }
+
+    public Cat() {
+        age = 0;
+    }
+
+
+    public int getAge()
+    {
+        return age;
+    }
+    public void setAge(int a) {
+        age = Math.max(a, 0);
+    }
+    public abstract void View();
+
+}
+#+end_src
+
+
+#+CAPTION: HomeCat
+#+begin_src java
+package org.example;
+
+public class HomeCat extends Cat
+{
+    private String name;
+    public String getName()
+    {
+        return name;
+    }
+    public void setName(String n)
+    {
+        name = n;
+    }
+
+    public HomeCat()
+    {
+        super();
+        name = "no name";
+    }
+    public HomeCat(int a, String n)
+    {
+        super(a);
+        name = n;
+    }
+    @Override
+    public void View()
+    {
+        System.out.println("Домашняя кошка - " + name + " Возраст - " + getAge());
+    }
+
+}
+#+end_src
+
+#+CAPTION: Main
+#+begin_src java
+package org.example;
+
+public class Main {
+    public static void main(String[] args) {
+        HomeCat cat = new HomeCat();
+        cat.setName("Вася");
+        cat.setAge(12);
+        cat.View();
+        HomeCat cat1 = new HomeCat(6,"Вова");
+        cat1.View();
+    }
+}
+#+end_src
+
+
+б) Пример с интерфейсами IGeometrical и IDrawable, классами Rectangle и Circle. 
+
+#+CAPTION: IGeometrical
+#+begin_src java
+public interface IGeometrical {
+    void getPerimeter();
+    void getArea();
+
+}
+#+end_src
+
+
+#+CAPTION: IDrawable
+#+begin_src java
+public interface IDrawable {
+    void draw();
+}
+#+end_src
+
+
+#+CAPTION: Rectangle
+#+begin_src java
+public class Rectangle implements IGeometrical, IDrawable{
+
+    public void getPerimeter()
+    {
+        System.out.println("(a + b) * 2");
+    }
+    public void getArea()
+    {
+        System.out.println("a * b");
+    }
+    public void draw()
+    {
+        System.out.println("Прямоугольник");
+    }
+}
+
+#+end_src
+
+#+CAPTION: Circle
+#+begin_src java
+public class Circle implements IGeometrical, IDrawable{
+    public void getPerimeter()
+    {
+        System.out.println("2 * pi * r");
+    }
+    public void getArea()
+    {
+        System.out.println("pi * r ^ 2");
+    }
+    public void draw()
+    {
+        System.out.println("Круг");
+    }
+}
+#+end_src
+
+#+CAPTION: Main
+#+begin_src java
+public class Main {
+    public static void main(String[] args) {
+        Rectangle rectangle = new Rectangle();
+        Circle circle = new Circle();
+        rectangle.getArea();
+        rectangle.getPerimeter();
+        rectangle.draw();
+        circle.getArea();
+        circle.getPerimeter();
+        circle.draw();
+    }
+}
+#+end_src
+
+
+
+#+DOWNLOADED: screenshot @ 2023-05-16 15:18:36
+[[file:images/2023-05-16_15-18-36_screenshot.png]]
+
+#+CAPTION: Интерфейс ICipher
+#+begin_src java
+public interface ICipher {
+    String encode(String value, Integer offset);
+
+    String decode(String value, Integer offset);
+}
+#+end_src
+
+#+CAPTION: BChipher
+#+begin_src java
+package su.pank;
+
+import java.util.Locale;
+
+public class BCipher implements ICipher {
+    String alph = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+
+
+    @Override
+    public String encode(String value, Integer offset) {
+        offset %= 33;
+        StringBuilder newString = new StringBuilder();
+        String valueLowerCase = value.toLowerCase();
+        for (int i = 0; i < value.length(); i += 1) {
+            int position = alph.indexOf(valueLowerCase.charAt(i));
+            if (position == -1) {
+                newString.append(valueLowerCase.charAt(i));
+                continue;
+            }
+            position = (33 + position + offset) % 33;
+
+            newString.append(Character.isLowerCase(value.charAt(i)) ? alph.charAt(position) : Character.toUpperCase(alph.charAt(position)));
+        }
+        return newString.toString();
+    }
+
+    @Override
+    public String decode(String value, Integer offset) {
+        offset %= 33;
+        StringBuilder newString = new StringBuilder();
+        String valueLowerCase = value.toLowerCase();
+        for (int i = 0; i < value.length(); i += 1) {
+            int position = alph.indexOf(valueLowerCase.charAt(i));
+            if (position == -1) {
+                newString.append(valueLowerCase.charAt(i));
+                continue;
+            }
+            position = (33 + position - offset) % 33;
+            newString.append(Character.isLowerCase(value.charAt(i)) ? alph.charAt(position) : Character.toUpperCase(alph.charAt(position)));
+        }
+        return newString.toString();
+    }
+}
+
+#+end_src
+
+#+CAPTION: Тесты
+#+begin_src kotlin
+class TestCipher {
+    companion object{
+        @JvmStatic
+        fun testEncodeParams(): Stream<Arguments?>? {
+            return Stream.of(
+                Arguments.of("А", "Г"),
+                Arguments.of("Я", "В"),
+                Arguments.of("Вася", "Егфв")
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("testEncodeParams")
+    fun testEncode(inputString: String, outputString: String){
+        assert(BCipher().encode(inputString, 3) == outputString)
+    }
+
+    @ParameterizedTest
+    @MethodSource("testEncodeParams")
+    fun testDecode(inputString: String, outputString: String){
+        assert(BCipher().decode(outputString, 3) == inputString)
+    }
+}
+#+end_src
+
+Результат выполнения тестов:
+
+
+#+CAPTION: Результат тестов
+[[file:images/2023-05-16_15-22-31_screenshot.png]]
+
+Задание 4. Создать класс Пользователь с полями Фамилия, имя, id, pin, поле с типом класса Счёт. Создать класс Счёт с полями название(вклада), баланс, поле с типом класса Пользователь, название банка. Создать интерфейс банкомат, в котором описаны следующие методы:
+узнать баланс, 
+пополнить счёт, 
+снять деньги со счета,
+перевести деньги с одного счета на другой. 
+При выполнении всех операций реализовывается проверка pin. При снятии и переводе денег необходимо учесть, достаточно ли средств. В основной программе(или в отдельном файле) создать класс Банкомат банка MyBank, реализующий интерфейс банкомат. В этом классе необходимо представить реализацию всех методов интерфейса Банкомат. При снятии денег со счета необходимо сделать проверку, является ли клиент банкомата клиентом банка MyBank. Если да, то при снятии денег комиссии на операцию нет, если нет, то комиссия 2 % от суммы. 
+При выполнении задания можно добавлять в классы дополнительные поля. 
+В основной программе показать взаимодействие созданных классов. Для некоторых операций необходимо создать списки объектов классов.
+
+Интерфейс банкомата:
+
+#+INCLUDE: ./src/main/java/su/pank/models/ATM.java src java
+
+Класс пользователя:
+
+#+INCLUDE: ./src/main/java/su/pank/models/User.java src java
+
+Класс счёта:
+
+#+INCLUDE: ./src/main/java/su/pank/models/Invoice.java src java
+
+Класс моего банка:
+
+#+INCLUDE: ./src/main/java/su/pank/models/MyBank.java src java
+
+Приложение:
+
+#+INCLUDE: ./src/main/java/su/pank/Main.java src java
+
+Демонстрация работы класса:
+
+#+begin_src text
+Добро пожаловать в мой банкомат: Банк Васи Панкова
+Регистрация нового пользователя...
+Введите имя пользователя:
+Введите pin-code
+Создаём счёт
+Введите имя счёта:
+Вы хотите открыть счёт в нашем банке?(y/n)
+Вы можете выбрать пользователя введя его имя и pin-code:
+0. Вася
+Введите имя пользователя:
+Авторизация пользователя Вася ...
+Введите pin-code
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Ошибка: Incorrect pin
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Баланс: 0
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите сумму для пополнения: 
+Введите ваш pin-code:
+Счет успешно пополнен
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Баланс: 1000
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите сумму для снятия: 
+Введите ваш pin-code:
+Недостаточно средств или неверная сумма для снятия
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите сумму для снятия: 
+Введите ваш pin-code:
+Снятие прошло успешно
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Баланс: 898
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Были рады видеть вас в моём банке.
+Добро пожаловать в мой банкомат: Банк Васи Панкова
+Вы можете выбрать пользователя введя его имя и pin-code:
+0. Вася
+Введите имя пользователя:
+Регистрация нового пользователя...
+Введите pin-code
+Создаём счёт
+Введите имя счёта:
+Вы хотите открыть счёт в нашем банке?(y/n)
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите сумму для пополнения: 
+Введите ваш pin-code:
+Ошибка: Incorrect pin
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите сумму для пополнения: 
+Введите ваш pin-code:
+Счет успешно пополнен
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+0. Вася
+1. Виктор
+Введите имя получателя: 
+Введите сумму для перевода: 
+Введите ваш pin-code:
+Перевод выполнен успешно
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Были рады видеть вас в моём банке.
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Были рады видеть вас в моём банке.
+Добро пожаловать в мой банкомат: Банк Васи Панкова
+Вы можете выбрать пользователя введя его имя и pin-code:
+0. Вася
+1. Виктор
+Введите имя пользователя:
+Авторизация пользователя Вася ...
+Введите pin-code
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Баланс: 1000
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Были рады видеть вас в моём банке.
+Добро пожаловать в мой банкомат: Банк Васи Панкова
+Вы можете выбрать пользователя введя его имя и pin-code:
+0. Вася
+1. Виктор
+Введите имя пользователя:
+Регистрация нового пользователя...
+Введите pin-code
+Создаём счёт
+Введите имя счёта:
+Вы хотите открыть счёт в нашем банке?(y/n)
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Были рады видеть вас в моём банке.
+Добро пожаловать в мой банкомат: Банк Васи Панкова
+Вы можете выбрать пользователя введя его имя и pin-code:
+0. 1
+1. Вася
+2. Виктор
+Введите имя пользователя:
+Авторизация пользователя Виктор ...
+Введите pin-code
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+Введите ваш pin-code:
+Баланс: 398
+-------------------------
+Выберите действие:
+1. Проверить баланс
+2. Пополнить счет
+3. Снять со счета
+4. Перевести деньги
+0. Выйти
+-------------------------
+#+end_src
+
